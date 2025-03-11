@@ -903,7 +903,7 @@ function database.with_bookmark (number, on_success, on_error)
       if h.text == bookmark.heading_text then
         tables.bookmarks:update{
           where = { number = number },
-          set = { heading_index = idx }
+          set = { heading_index = idx },
         }
         on_success(bookmark, note, h)
         found = true
