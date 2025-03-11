@@ -199,7 +199,8 @@ function utils.file.insert_text (text, path, index, is_prepend)
   local f = io.open(path, 'r')
   vim.defer_fn(function ()
     if not f then
-      error(string.format('Failed to write to file: %s', path))
+      vim.notify('Failed to write to file: ' .. path, vim.log.levels.ERROR)
+      return
     end
     for line in f:lines() do
       table.insert(file_content, line)
@@ -208,7 +209,7 @@ function utils.file.insert_text (text, path, index, is_prepend)
     state.undo.file_content = vim.deepcopy(file_content)
     local outline = utils.file.get_outline(path)
     if #outline.headings < index then
-      error('Heading index ' .. index .. ' out of bounds for file: ' .. path)
+      vim.notify('Heading index ' .. index .. ' out of bounds for file: ' .. path, vim.log.levels.WARN)
       return
     end
     local lines = vim.deepcopy(file_content)
@@ -334,7 +335,8 @@ function utils.file.insert_text (text, path, index, is_prepend)
         f:write(table.concat(lines, '\n') .. '\n')
         f:close()
       else
-        error(string.format('Failed to write to file: %s', path))
+        vim.notify('Failed to write to file:' .. path, vim.log.levels.ERROR)
+        return
       end
     end
     if path == vim.fn.expand'%:p' and (not using_existing_buffer or vim.api.nvim_get_current_buf() ~= existing_bufnr) then
@@ -500,7 +502,8 @@ function utils.file.update_frontmatter (path)
   end
   f = io.open(path, 'w')
   if not f then
-    error(string.format('Failed to open file for writing: %s', path))
+    vim.notify('Failed to open file for writing: ' .. path, vim.log.levels.ERROR)
+    return
   end
   for _, line in ipairs(lines) do
     f:write(line .. '\n')

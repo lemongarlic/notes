@@ -280,7 +280,8 @@ function db_utils.update_frontmatter (file_path, force_update)
   else
     local f = io.open(file_path, 'w')
     if not f then
-      error(string.format('Failed to open file for writing: %s', file_path))
+      vim.notify('Failed to open file for writing: ' .. file_path, vim.log.levels.ERROR)
+      return
     end
     for _, line in ipairs(lines) do
       f:write(line .. '\n')
@@ -479,7 +480,7 @@ end
 function database.find_heading (note_path, callback)
   local outline = utils.file.get_outline(note_path)
   if #outline.headings == 0 then
-    print'No headings found in selected note'
+    vim.notify('No headings found in selected note', vim.log.levels.WARN)
     return
   end
   if #outline.headings == 1 then
@@ -867,7 +868,7 @@ end
 function database.get_note_title (note_id)
   local note = tables.notes:where{ id = note_id }
   if not note then
-    error('Note not found for ID: ' .. note_id)
+    vim.notify('Note not found for ID: ' .. note_id, vim.log.levels.ERROR)
     return nil
   end
   local outline = utils.file.get_outline(db_utils.get_full_path(note.filename))
@@ -879,24 +880,22 @@ function database.get_note_title (note_id)
   return nil
 end
 
-function database.with_bookmark (number, on_success, on_error)
-  if not on_error then
-    on_error = error
-  end
+function database.with_bookmark (number, fn)
   local bookmark = tables.bookmarks:where{ number = number }
   if not bookmark then
-    on_error('Bookmark not found: ' .. number)
+    vim.notify('Bookmark not found: ' .. number, vim.log.levels.WARN)
     return
   end
   local note = tables.notes:where{ id = bookmark.note_id }
   if not note then
-    on_error('Note not found for bookmark: ' .. number)
+    vim.notify('Note not found for bookmark: ' .. number, vim.log.levels.ERROR)
+    -- FIXME: should delete bookmark here
     return
   end
   local outline = utils.file.get_outline(db_utils.get_full_path(note.filename))
   local heading = outline.headings[bookmark.heading_index]
   if heading and heading.text == bookmark.heading_text then
-    on_success(bookmark, note, heading)
+    fn(bookmark, note, heading)
   else
     local found = false
     for idx, h in ipairs(outline.headings) do
@@ -905,7 +904,7 @@ function database.with_bookmark (number, on_success, on_error)
           where = { number = number },
           set = { heading_index = idx },
         }
-        on_success(bookmark, note, h)
+        fn(bookmark, note, h)
         found = true
         break
       end
@@ -915,11 +914,12 @@ function database.with_bookmark (number, on_success, on_error)
         where = { number = number },
         set = { heading_text = heading.text }
       }
-      on_success(bookmark, note, heading)
+      fn(bookmark, note, heading)
       found = true
     end
     if not found then
-      error('Heading not found for bookmark: ' .. number)
+      vim.notify('Heading not found for bookmark: ' .. number, vim.log.levels.ERROR)
+      -- FIXME: should delete bookmark here
     end
   end
 end
@@ -976,7 +976,7 @@ function database.goto_bookmark (number)
     vim.cmd('e! ' .. db_utils.get_full_path(note.filename))
     vim.api.nvim_win_set_cursor(0, { heading.start_row, 0 })
     vim.cmd'normal! zt'
-  end, print)
+  end)
 end
 
 return database

@@ -86,7 +86,7 @@ _G.Notes.api = {
     state.undo.file_path = ''
     state.undo.file_content = {}
     state.undo.prompt_content = {}
-    print('Reverted changes to ' .. vim.fn.fnamemodify(file_path, ':t'))
+    vim.notify('Reverted changes to ' .. vim.fn.fnamemodify(file_path, ':t'), vim.log.levels.INFO)
   end,
   bookmarks = {
     add = function (number)
@@ -101,6 +101,7 @@ _G.Notes.api = {
     list = function ()
       local bookmarks = database.get_bookmarks()
       if #bookmarks <= 0 then
+        vim.notify('No bookmarks found', vim.log.levels.INFO)
         return
       end
       local lines = {}
