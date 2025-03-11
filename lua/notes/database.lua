@@ -889,7 +889,7 @@ function database.with_bookmark (number, fn)
   local note = tables.notes:where{ id = bookmark.note_id }
   if not note then
     vim.notify('Note not found for bookmark: ' .. number, vim.log.levels.ERROR)
-    -- FIXME: should delete bookmark here
+    tables.bookmarks:remove{ number = number }
     return
   end
   local outline = utils.file.get_outline(db_utils.get_full_path(note.filename))
@@ -919,7 +919,7 @@ function database.with_bookmark (number, fn)
     end
     if not found then
       vim.notify('Heading not found for bookmark: ' .. number, vim.log.levels.ERROR)
-      -- FIXME: should delete bookmark here
+      tables.bookmarks:remove{ number = number }
     end
   end
 end
