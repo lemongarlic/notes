@@ -818,7 +818,7 @@ function database.init ()
       end
     end,
   })
-  
+
   vim.api.nvim_create_autocmd({ 'FocusGained' }, {
     pattern = '*.md',
     callback = function ()
@@ -879,21 +879,24 @@ function database.get_note_title (note_id)
   return nil
 end
 
-function database.with_bookmark (number, callback)
+function database.with_bookmark (number, on_success, on_error)
+  if not on_error then
+    on_error = error
+  end
   local bookmark = tables.bookmarks:where{ number = number }
   if not bookmark then
-    error('Bookmark not found: ' .. number)
+    on_error('Bookmark not found: ' .. number)
     return
   end
   local note = tables.notes:where{ id = bookmark.note_id }
   if not note then
-    error('Note not found for bookmark: ' .. number)
+    on_error('Note not found for bookmark: ' .. number)
     return
   end
   local outline = utils.file.get_outline(db_utils.get_full_path(note.filename))
   local heading = outline.headings[bookmark.heading_index]
   if heading and heading.text == bookmark.heading_text then
-    callback(bookmark, note, heading)
+    on_success(bookmark, note, heading)
   else
     local found = false
     for idx, h in ipairs(outline.headings) do
@@ -902,7 +905,7 @@ function database.with_bookmark (number, callback)
           where = { number = number },
           set = { heading_index = idx }
         }
-        callback(bookmark, note, h)
+        on_success(bookmark, note, h)
         found = true
         break
       end
@@ -912,7 +915,7 @@ function database.with_bookmark (number, callback)
         where = { number = number },
         set = { heading_text = heading.text }
       }
-      callback(bookmark, note, heading)
+      on_success(bookmark, note, heading)
       found = true
     end
     if not found then
@@ -973,7 +976,7 @@ function database.goto_bookmark (number)
     vim.cmd('e! ' .. db_utils.get_full_path(note.filename))
     vim.api.nvim_win_set_cursor(0, { heading.start_row, 0 })
     vim.cmd'normal! zt'
-  end)
+  end, print)
 end
 
 return database
