@@ -88,7 +88,7 @@ local function reset_leader ()
         pcall(vim.keymap.del, mode, key, { buffer = state.prompt.buffer })
       end
       for i = 0, 9 do
-        pcall(vim.keymap.del, mode, '<c-k>' .. i, { buffer = state.prompt.buffer })
+        pcall(vim.keymap.del, mode, '' .. i, { buffer = state.prompt.buffer })
       end
     end
   end
@@ -276,7 +276,7 @@ function keymap_fns.activate_leader ()
   if vim.b.note_type == 'note' then
     vim.keymap.set({ 'n', 'x', 'i' }, 'i', function () leader_fns.save_to_inbox() end, options)
     for i = 0, 9 do
-      vim.keymap.set({ 'n', 'x', 'i' }, '' .. i .. '', function () leader_fns.save_to_bookmark(i) end, options)
+      vim.keymap.set({ 'n', 'x', 'i' }, '' .. i, function () leader_fns.save_to_bookmark(i) end, options)
     end
   elseif vim.b.note_type == 'topic' then
   end
